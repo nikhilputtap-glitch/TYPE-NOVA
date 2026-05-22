@@ -54,6 +54,9 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       coins: 50,
       streak: 0,
       lastActiveDate: new Date().toISOString().split('T')[0],
+      streakShields: 0,
+      unlockedThemes: ['neon-dark', 'glass-light', 'retro-terminal', 'cyberpunk-magenta'],
+      activeAvatarBorder: 'none',
       levelPath: {
         skill: 'Beginner',
         purpose: 'Office',

@@ -9,7 +9,7 @@ export type TrainingPurpose = 'School' | 'Coding' | 'Office' | 'Gaming' | 'Compe
 export type TypingLanguage = 'English' | 'Telugu' | 'Hindi' | 'Tamil' | 'Urdu' | 'Arabic' | 'Spanish' | 'French';
 
 export interface UserPreferences {
-  theme: 'neon-dark' | 'glass-light' | 'retro-terminal' | 'cyberpunk-magenta';
+  theme: 'neon-dark' | 'glass-light' | 'retro-terminal' | 'cyberpunk-magenta' | 'matrix-green' | 'molten-lava';
   keyboardLayout: KeyboardLayout;
   language: TypingLanguage;
   soundPack: 'off' | 'mechanical' | 'laser' | 'beep';
@@ -57,6 +57,9 @@ export interface UserProfile {
   streak: number;
   lastActiveDate: string; // YYYY-MM-DD
   lastStreakClaimedDate?: string; // YYYY-MM-DD
+  streakShields?: number;
+  unlockedThemes?: string[];
+  activeAvatarBorder?: string; // e.g. 'none' | 'golden' | 'neon-glow' | 'cyber-shield'
   levelPath: {
     skill: SkillLevel;
     purpose: TrainingPurpose;

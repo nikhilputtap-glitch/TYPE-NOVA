@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Play, BookOpen, Swords, Gamepad2, Award, Sparkles, TrendingUp, Flame, ChevronRight, Zap, Target, Activity } from 'lucide-react';
 import { UserProfile, TaskChallenge } from '../types';
 import { MOCK_CHALLENGES } from '../lessonsData';
+import CoinShop from './CoinShop';
 
 interface DashboardProps {
   profile: UserProfile;
@@ -9,9 +10,23 @@ interface DashboardProps {
   onClaimDailyReward: () => void;
   claimedStreak: boolean;
   onResetStreak: () => void;
+  onUpdateProfile: (updated: UserProfile) => void;
 }
 
-export default function Dashboard({ profile, onChangeView, onClaimDailyReward, claimedStreak, onResetStreak }: DashboardProps) {
+export default function Dashboard({ profile, onChangeView, onClaimDailyReward, claimedStreak, onResetStreak, onUpdateProfile }: DashboardProps) {
+  const getAvatarBorderClass = () => {
+    switch (profile.activeAvatarBorder) {
+      case 'golden':
+        return 'bg-gradient-to-tr from-yellow-300 via-amber-400 to-yellow-600 shadow-[0_0_20px_rgba(245,158,11,0.6)] animate-pulse border border-yellow-250';
+      case 'neon-glow':
+        return 'bg-gradient-to-tr from-fuchsia-400 via-purple-600 to-cyan-400 shadow-[0_0_25px_rgba(168,85,247,0.7)] animate-pulse';
+      case 'cyber-shield':
+        return 'bg-gradient-to-tr from-red-500 via-orange-600 to-yellow-500 shadow-[0_0_20px_rgba(239,68,68,0.6)] animate-bounce';
+      default:
+        return 'bg-gradient-to-tr from-cyan-400 to-pink-500 shadow-[0_0_15px_rgba(34,211,238,0.3)]';
+    }
+  };
+
   // Dynamic personalized pathway recommendation text
   const getRecommendation = () => {
     switch (profile.levelPath.skill) {
@@ -62,7 +77,7 @@ export default function Dashboard({ profile, onChangeView, onClaimDailyReward, c
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.8 }}
-              className="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-400 to-pink-500 p-[1.5px] shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+              className={`w-16 h-16 rounded-full p-[1.5px] transition-all duration-300 ${getAvatarBorderClass()}`}
             >
               <div className="w-full h-full bg-[#0a0a0c] rounded-full flex items-center justify-center overflow-hidden">
                 <img src={profile.avatarUrl} alt="avatar" className="w-11 h-11 object-contain referrerPolicy='no-referrer'" />
@@ -348,6 +363,9 @@ export default function Dashboard({ profile, onChangeView, onClaimDailyReward, c
           ))}
         </div>
       </div>
+
+      {/* COIN VAULT AND WORKSPACE STORE */}
+      <CoinShop profile={profile} onUpdateProfile={onUpdateProfile} />
     </div>
   );
 }

@@ -231,21 +231,91 @@ export default function App() {
     return <Onboarding userProfile={profile} onComplete={handleOnboardingComplete} />;
   }
 
+  const getThemeClasses = () => {
+    if (!profile) return {
+      bg: 'bg-[#0a0a0c] text-white',
+      header: 'bg-white/5 border-b border-white/10',
+      logo: 'text-cyan-400',
+      glowTop: 'bg-cyan-500/10',
+      glowBottom: 'bg-purple-600/10'
+    };
+    switch (profile.preferences.theme) {
+      case 'neon-dark':
+        return {
+          bg: 'bg-[#0a0a0c] text-white',
+          header: 'bg-white/5 border-b border-white/10',
+          logo: 'text-cyan-400',
+          glowTop: 'bg-cyan-500/10',
+          glowBottom: 'bg-purple-600/10'
+        };
+      case 'glass-light':
+        return {
+          bg: 'bg-[#f4f6fa] text-slate-900',
+          header: 'bg-[#ffffff]/85 border-b border-slate-200/80',
+          logo: 'text-blue-500',
+          glowTop: 'bg-blue-500/5',
+          glowBottom: 'bg-indigo-500/5'
+        };
+      case 'retro-terminal':
+        return {
+          bg: 'bg-[#040804] text-green-400 font-mono',
+          header: 'bg-black/90 border-b border-green-500/20',
+          logo: 'text-green-500',
+          glowTop: 'bg-green-500/5',
+          glowBottom: 'bg-green-600/5'
+        };
+      case 'cyberpunk-magenta':
+        return {
+          bg: 'bg-[#0b0110] text-[#ff00a0]',
+          header: 'bg-black/80 border-b border-pink-500/20',
+          logo: 'text-pink-500',
+          glowTop: 'bg-pink-500/10',
+          glowBottom: 'bg-purple-600/10'
+        };
+      case 'matrix-green':
+        return {
+          bg: 'bg-black text-[#00ff41] font-mono',
+          header: 'bg-black border-b border-emerald-500/30',
+          logo: 'text-[#00ff41] font-bold shadow-[0_0_10px_rgba(0,255,65,0.3)]',
+          glowTop: 'bg-emerald-500/15',
+          glowBottom: 'bg-emerald-600/10'
+        };
+      case 'molten-lava':
+        return {
+          bg: 'bg-[#0a0202] text-[#ff4500]',
+          header: 'bg-[#150505]/95 border-b border-red-600/30',
+          logo: 'text-[#ff5500] font-black',
+          glowTop: 'bg-red-500/20',
+          glowBottom: 'bg-orange-600/10'
+        };
+      default:
+        return {
+          bg: 'bg-[#0a0a0c] text-white',
+          header: 'bg-white/5 border-b border-white/10',
+          logo: 'text-cyan-400',
+          glowTop: 'bg-cyan-500/10',
+          glowBottom: 'bg-purple-600/10'
+        };
+    }
+  };
+
+  const theme = getThemeClasses();
+
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-[#ffffff] flex flex-col justify-between relative overflow-hidden">
+    <div className={`min-h-screen ${theme.bg} flex flex-col justify-between relative overflow-hidden transition-colors duration-300`}>
       {/* Background radial glow layers - Pure Immersive UI layout */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[130px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 blur-[160px] rounded-full"></div>
+        <div className={`absolute top-[-10%] left-[-10%] w-[40%] h-[40%] ${theme.glowTop} blur-[130px] rounded-full`}></div>
+        <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] ${theme.glowBottom} blur-[160px] rounded-full`}></div>
       </div>
 
       {/* GLOWING HEADER NAVIGATION PANEL */}
-      <header className="sticky top-0 z-50 bg-white/5 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex items-center justify-between relative z-10 select-none">
+      <header className={`sticky top-0 z-50 ${theme.header} backdrop-blur-xl px-6 py-4 flex items-center justify-between relative z-10 select-none`}>
         <div className="flex items-center gap-7">
           {/* Logo */}
           <button onClick={() => setCurrentView('dashboard')} id="btn-header-logo-home" className="flex items-center gap-2 font-display font-bold text-lg text-white italic tracking-tight">
-            <Keyboard className="w-5 h-5 text-cyan-400 not-italic drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
-            TYPE<span className="text-cyan-400">NOVA</span>
+            <Keyboard className={`w-5 h-5 ${theme.logo} not-italic drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]`} />
+            TYPE<span className={theme.logo.includes('text') ? theme.logo : 'text-cyan-400'}>NOVA</span>
             <span className="bg-white/10 px-2.5 py-0.5 rounded text-[9px] font-medium not-italic tracking-widest text-white/50 border border-white/10 ml-2">ELITE v2.0</span>
           </button>
 
@@ -389,6 +459,7 @@ export default function App() {
                       const updatedProfile = { ...profile, streak: 0 };
                       saveProfile(updatedProfile);
                     }}
+                    onUpdateProfile={saveProfile}
                   />
                 )}
                 {currentView === 'lessons' && (
