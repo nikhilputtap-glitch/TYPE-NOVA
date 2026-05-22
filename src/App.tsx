@@ -394,6 +394,7 @@ export default function App() {
                 {currentView === 'lessons' && (
                   <LessonPractice
                     profile={profile}
+                    onChangeView={setCurrentView}
                     onLessonFinish={(lid, stats) => {
                       // Construct standard completed metrics session represent
                       const session: TypingSession = {
@@ -421,8 +422,6 @@ export default function App() {
                         };
                         saveProfile(updated);
                       }
-
-                      setCurrentView('dashboard');
                     }}
                   />
                 )}

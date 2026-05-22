@@ -54,11 +54,11 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
 
   // Open direct UPI Payment Modal for Elite Upgrade
   const handleSubscribe = () => {
-    const upiUrl = getUpiUrl(399, 'TypeNova Elite Monthly Plan');
+    const upiUrl = getUpiUrl(1, 'TypeNova Elite Monthly Plan');
     setPaymentDetails({
       type: 'elite',
-      priceUSD: 4.99,
-      priceINR: 399,
+      priceUSD: 0.01,
+      priceINR: 1,
       title: 'Elite Monthly Subscription Plan',
       upiUrl
     });
@@ -113,8 +113,8 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
           <div>
             <span className="text-xs font-mono text-pink-400 font-bold uppercase block">Elite Monthly plan</span>
             <div className="flex items-baseline gap-1 mt-4">
-              <span className="text-4xl font-extrabold text-white font-display">₹399</span>
-              <span className="text-pink-400/60 text-xs font-mono ml-1">/ $4.99 USD</span>
+              <span className="text-4xl font-extrabold text-white font-display">₹1</span>
+              <span className="text-pink-400/60 text-xs font-mono ml-1">/ $0.01 USD</span>
             </div>
 
             <ul className="space-y-3.5 mt-6 text-xs text-white/60">

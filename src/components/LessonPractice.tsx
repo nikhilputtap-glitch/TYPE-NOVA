@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Check, BookOpen, Brain, RotateCcw, Volume2, ShieldCheck, Key, RefreshCw } from 'lucide-react';
+import { Play, Check, BookOpen, Brain, RotateCcw, Volume2, ShieldCheck, Key, RefreshCw, Trophy, ArrowRight, Home, Sparkles } from 'lucide-react';
 import { TypingLesson, UserProfile } from '../types';
 import { LOCAL_LESSONS } from '../lessonsData';
 
 interface LessonPracticeProps {
   profile: UserProfile;
   onLessonFinish: (lessonId: string, stats: { wpm: number; accuracy: number; durationSeconds: number; errors: number; weakKeys: string[] }) => void;
+  onChangeView?: (view: string) => void;
 }
 
-export default function LessonPractice({ profile, onLessonFinish }: LessonPracticeProps) {
+export default function LessonPractice({ profile, onLessonFinish, onChangeView }: LessonPracticeProps) {
   const [activeLesson, setActiveLesson] = useState<TypingLesson>(LOCAL_LESSONS[0]);
   const [typedInput, setTypedInput] = useState('');
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -19,6 +20,16 @@ export default function LessonPractice({ profile, onLessonFinish }: LessonPracti
   const [weakKeys, setWeakKeys] = useState<string[]>([]);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState<'All' | 'Beginner' | 'Intermediate' | 'Advanced'>('All');
+  
+  // Track metrics of custom completed drill
+  const [completedStats, setCompletedStats] = useState<{
+    wpm: number;
+    accuracy: number;
+    durationSeconds: number;
+    errors: number;
+    weakKeys: string[];
+    xpReward: number;
+  } | null>(null);
 
   // Input ref to keep focus active
   const inputRef = useRef<HTMLInputElement>(null);
@@ -117,12 +128,14 @@ export default function LessonPractice({ profile, onLessonFinish }: LessonPracti
     const targetChar = activeLesson.promptText[currentTargetIndex];
     const typedChar = val[currentTargetIndex];
 
+    let currentErrors = errors;
     if (typedChar !== undefined) {
       if (typedChar === targetChar) {
         playSound('correct');
       } else {
         playSound('error');
-        setErrors((prev) => prev + 1);
+        currentErrors = errors + 1;
+        setErrors(currentErrors);
         if (targetChar && !weakKeys.includes(targetChar.toLowerCase())) {
           setWeakKeys((prev) => [...prev, targetChar.toLowerCase()]);
         }
@@ -141,14 +154,25 @@ export default function LessonPractice({ profile, onLessonFinish }: LessonPracti
       const elapsedSeconds = Math.max(1, (endTimestamp - (startTime || endTimestamp)) / 1000);
       const totalChars = activeLesson.promptText.length;
       const wpmCalculated = Math.round((totalChars / 5) / (elapsedSeconds / 60));
-      const accCalculated = Math.round(((totalChars - errors) / totalChars) * 100);
+      const accCalculated = Math.round(((totalChars - currentErrors) / totalChars) * 100);
 
-      onLessonFinish(activeLesson.id, {
+      const stats = {
         wpm: wpmCalculated || 20,
         accuracy: Math.max(0, accCalculated),
         durationSeconds: Math.round(elapsedSeconds),
-        errors,
-        weakKeys
+        errors: currentErrors,
+        weakKeys,
+        xpReward: activeLesson.xpReward || 30
+      };
+
+      setCompletedStats(stats);
+
+      onLessonFinish(activeLesson.id, {
+        wpm: stats.wpm,
+        accuracy: stats.accuracy,
+        durationSeconds: stats.durationSeconds,
+        errors: stats.errors,
+        weakKeys: stats.weakKeys
       });
     }
   };
@@ -159,9 +183,35 @@ export default function LessonPractice({ profile, onLessonFinish }: LessonPracti
     setErrors(0);
     setCompleted(false);
     setWeakKeys([]);
-    if (inputRef.current) {
-      inputRef.current.focus();
+    setCompletedStats(null);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 50);
+  };
+
+  const handleNextLesson = () => {
+    // Find index in LOCAL_LESSONS
+    const currentIndex = LOCAL_LESSONS.findIndex((l) => l.id === activeLesson.id);
+    let nextLesson = LOCAL_LESSONS[0];
+    if (currentIndex !== -1 && currentIndex < LOCAL_LESSONS.length - 1) {
+      nextLesson = LOCAL_LESSONS[currentIndex + 1];
+    } else {
+      nextLesson = LOCAL_LESSONS[0]; // Wrap around
     }
+    setActiveLesson(nextLesson);
+    setTypedInput('');
+    setStartTime(null);
+    setErrors(0);
+    setCompleted(false);
+    setWeakKeys([]);
+    setCompletedStats(null);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 50);
   };
 
   // Dynamic request using AI Coach generative endpoint
@@ -349,69 +399,189 @@ export default function LessonPractice({ profile, onLessonFinish }: LessonPracti
           <p className="text-xs text-white/60 mt-1 leading-relaxed">{activeLesson.description}</p>
         </div>
 
-        {/* CORE INTERACTIVE TYPING BOARD BOX */}
-        <div
-          onClick={() => inputRef.current?.focus()}
-          className="glass-panel p-8 rounded-3xl relative border border-white/15 cursor-text min-h-[160px] flex flex-col justify-center overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60" />
-          {/* Out of focus alert */}
-          {document.activeElement !== inputRef.current && !completed && (
-            <div className="absolute inset-0 bg-black/50 rounded-3xl backdrop-blur-xs flex items-center justify-center z-10 select-none">
-              <span className="px-5 py-2.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase rounded-xl tracking-widest cursor-pointer blink shadow-[0_0_12px_rgba(34,211,238,0.2)]">
-                Click here to activate keyboard focus
-              </span>
-            </div>
-          )}
+        <AnimatePresence mode="wait">
+          {!completed ? (
+            <motion.div
+              key="typing-pane"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-6 flex flex-col"
+            >
+              {/* CORE INTERACTIVE TYPING BOARD BOX */}
+              <div
+                onClick={() => inputRef.current?.focus()}
+                className="glass-panel p-8 rounded-3xl relative border border-white/15 cursor-text min-h-[160px] flex flex-col justify-center overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60" />
+                {/* Out of focus alert */}
+                {document.activeElement !== inputRef.current && (
+                  <div className="absolute inset-0 bg-black/50 rounded-3xl backdrop-blur-xs flex items-center justify-center z-10 select-none">
+                    <span className="px-5 py-2.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase rounded-xl tracking-widest cursor-pointer blink shadow-[0_0_12px_rgba(34,211,238,0.2)]">
+                      Click here to activate keyboard focus
+                    </span>
+                  </div>
+                )}
 
-          {/* Prompt displaying area */}
-          <div className="relative text-lg md:text-xl font-mono leading-relaxed tracking-wide text-white/20 select-none">
-            {/* Display correct and incorrect words characters */}
-            {activeLesson.promptText.split('').map((char, index) => {
-              let color = 'text-white/20';
-              let underline = '';
+                {/* Prompt displaying area */}
+                <div className="relative text-lg md:text-xl font-mono leading-relaxed tracking-wide text-white/20 select-none">
+                  {/* Display correct and incorrect words characters */}
+                  {activeLesson.promptText.split('').map((char, index) => {
+                    let color = 'text-white/20';
+                    let underline = '';
 
-              if (index < typedInput.length) {
-                // Was typed! Correct or wrong?
-                color = typedInput[index] === char ? 'text-cyan-400' : 'text-rose-500 bg-rose-500/10 border border-rose-550/20 px-[0.5px] rounded-md';
-              } else if (index === typedInput.length) {
-                // Active character typing point!
-                color = 'text-white font-bold relative bg-white/10 border-b-2 border-cyan-400 rounded px-[0.5px]';
-                underline = 'cursor-flicker';
-              }
+                    if (index < typedInput.length) {
+                      // Was typed! Correct or wrong?
+                      color = typedInput[index] === char ? 'text-cyan-400' : 'text-rose-500 bg-rose-500/10 border border-rose-550/20 px-[0.5px] rounded-md';
+                    } else if (index === typedInput.length) {
+                      // Active character typing point!
+                      color = 'text-white font-bold relative bg-white/10 border-b-2 border-cyan-400 rounded px-[0.5px]';
+                      underline = 'cursor-flicker';
+                    }
 
-              return (
-                <span key={index} className={`${color} ${underline}`}>
-                  {char === '\n' ? ' ↵\n' : char}
+                    return (
+                      <span key={index} className={`${color} ${underline}`}>
+                        {char === '\n' ? ' ↵\n' : char}
+                      </span>
+                    );
+                  })}
+                </div>
+
+                {/* Invisible active input receptor */}
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={typedInput}
+                  onChange={handleInputChange}
+                  disabled={completed}
+                  className="absolute opacity-0 pointer-events-none"
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </div>
+
+              {/* FINGER RECOMMENDATIONS GUIDE */}
+              <div className={`p-4 bg-white/5 border rounded-2xl flex items-center justify-between text-xs tracking-wide border-white/10 ${currentFingerAdvice.color}`}>
+                <span className="flex items-center gap-1.5 font-mono uppercase font-bold text-[10px]">
+                  <Key className="w-4 h-4" /> Next key: "{nextCharNeeded}"
                 </span>
-              );
-            })}
-          </div>
+                <span className="font-mono uppercase font-bold text-[10px] tracking-wider">Finger Guide: {currentFingerAdvice.label}</span>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="completed-summary-pane"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="glass-panel p-8 rounded-3xl relative border border-cyan-500/20 bg-[#0d0f19] flex flex-col justify-center overflow-hidden text-center space-y-6"
+            >
+              {/* Holographic header design lines */}
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
+              <div className="absolute inset-0 bg-radial-at-t from-cyan-500/5 via-transparent to-transparent pointer-events-none" />
 
-          {/* Invisible active input receptor */}
-          <input
-            ref={inputRef}
-            type="text"
-            value={typedInput}
-            onChange={handleInputChange}
-            disabled={completed}
-            className="absolute opacity-0 pointer-events-none"
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-          />
-        </div>
+              <div className="space-y-1 relative">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-400/10 text-cyan-400 border border-cyan-500/20 rounded-full font-mono font-bold tracking-widest text-[9px] uppercase shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                  <Sparkles className="w-3 h-3 animate-pulse" /> DRILL COMPILED SUCCESSFULLY
+                </span>
+                <h3 className="text-xl font-black font-display text-white mt-3 uppercase tracking-tight">
+                  "{activeLesson.title}" Completed!
+                </h3>
+                <p className="text-xs text-white/50 font-mono">
+                  System telemetry verified sequence match at 100% block integrity.
+                </p>
+              </div>
 
-        {/* FINGER RECOMMENDATIONS GUIDE */}
-        {!completed && (
-          <div className={`p-4 bg-white/5 border rounded-2xl flex items-center justify-between text-xs tracking-wide border-white/10 ${currentFingerAdvice.color}`}>
-            <span className="flex items-center gap-1.5 font-mono uppercase font-bold text-[10px]">
-              <Key className="w-4 h-4" /> Next key: "{nextCharNeeded}"
-            </span>
-            <span className="font-mono uppercase font-bold text-[10px] tracking-wider">Finger Guide: {currentFingerAdvice.label}</span>
-          </div>
-        )}
+              {/* Detailed metrics dashboard stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                {/* SPEED */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner relative hover:border-cyan-500/20 transition duration-150">
+                  <span className="text-[8px] font-mono font-bold tracking-wider text-white/40 uppercase">SPEED</span>
+                  <span className="text-2xl md:text-3xl font-black font-mono text-cyan-400 mt-1">{completedStats?.wpm}</span>
+                  <span className="text-[9px] font-mono text-cyan-400/60 uppercase font-black tracking-widest mt-0.5">WPM</span>
+                </div>
+
+                {/* ACCURACY */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner relative hover:border-emerald-500/20 transition duration-150">
+                  <span className="text-[8px] font-mono font-bold tracking-wider text-white/40 uppercase">ACCURACY</span>
+                  <span className={`text-2xl md:text-3xl font-black font-mono mt-1 ${
+                    (completedStats?.accuracy ?? 100) >= 95 ? 'text-emerald-400' : (completedStats?.accuracy ?? 0) >= 85 ? 'text-yellow-400' : 'text-rose-500'
+                  }`}>{completedStats?.accuracy}%</span>
+                  <span className={`text-[9px] font-mono uppercase font-black tracking-widest mt-0.5 ${
+                    (completedStats?.accuracy ?? 100) >= 95 ? 'text-emerald-400/60' : 'text-yellow-400/60'
+                  }`}>RATING</span>
+                </div>
+
+                {/* TIME */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner relative hover:border-purple-500/20 transition duration-150">
+                  <span className="text-[8px] font-mono font-bold tracking-wider text-white/40 uppercase">TIME TAKE</span>
+                  <span className="text-2xl md:text-3xl font-black font-mono text-purple-400 mt-1">{completedStats?.durationSeconds}s</span>
+                  <span className="text-[9px] font-mono text-purple-400/60 uppercase font-black tracking-widest mt-0.5">ELAPSED</span>
+                </div>
+
+                {/* ERRORS */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner relative hover:border-rose-500/20 transition duration-150">
+                  <span className="text-[8px] font-mono font-bold tracking-wider text-white/40 uppercase">ERRORS</span>
+                  <span className={`text-2xl md:text-3xl font-black font-mono mt-1 ${
+                    (completedStats?.errors ?? 0) > 0 ? 'text-rose-500' : 'text-emerald-400'
+                  }`}>{completedStats?.errors}</span>
+                  <span className="text-[9px] font-mono text-rose-500/60 uppercase font-black tracking-widest mt-0.5">KEY STROKES</span>
+                </div>
+              </div>
+
+              {/* Rewards notification block */}
+              <div className="bg-[#0b0c13] border border-white/5 rounded-2xl p-4 flex items-center justify-between font-mono text-xs text-white/70">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-yellow-400/15 rounded-xl border border-yellow-400/20">
+                    <Trophy className="w-4 h-4 text-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-bold text-white text-[11px]">DRILL COMPLETED</span>
+                    <span className="text-[9px] text-gray-400">XP and Coins credited instantly.</span>
+                  </div>
+                </div>
+                <div className="flex gap-3 text-right">
+                  <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <span className="text-green-400 font-black">+{completedStats?.xpReward} XP</span>
+                  </div>
+                  <div className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <span className="text-amber-400 font-black">+{Math.max(10, Math.round((completedStats?.wpm ?? 30) / 4))} Coins</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation actions for non-stop speedflow lessons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+                <button
+                  onClick={handleNextLesson}
+                  id="btn-lesson-continue-next"
+                  className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:brightness-110 active:scale-95 text-white font-extrabold text-xs tracking-wider uppercase rounded-xl transition shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  CONTINUE NEXT DRILL <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleReset}
+                  id="btn-lesson-retry-mid"
+                  className="w-full sm:w-auto px-5 py-3.5 bg-white/10 hover:bg-white/15 active:scale-95 text-white font-bold text-xs tracking-wider uppercase rounded-xl border border-white/5 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> PRACTICE AGAIN
+                </button>
+                {onChangeView && (
+                  <button
+                    onClick={() => onChangeView('dashboard')}
+                    id="btn-lesson-back-dash"
+                    className="w-full sm:w-auto px-5 py-3.5 bg-white/5 hover:bg-white/10 active:scale-95 text-white/70 hover:text-white font-bold text-xs tracking-wider uppercase rounded-xl border border-white/10 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Home className="w-3.5 h-3.5" /> DASHBOARD
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* VIRTUAL KEYBOARD GRAPHICAL HEATMAP */}
         <div className="p-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-3xl space-y-2 select-none relative overflow-hidden">
