@@ -38,6 +38,12 @@ export default function App() {
 
     if (savedProfile) {
       const parsed = JSON.parse(savedProfile);
+      // Auto-migrate: If the user manually requested the streak to start from 0
+      // or if it was initialized to 1 or 2 by default previously, let's update it to 0!
+      if (parsed.streak === 1 || parsed.streak === 2) {
+        parsed.streak = 0;
+        localStorage.setItem('typenova_profile', JSON.stringify(parsed));
+      }
       setProfile(parsed);
       setCurrentView('dashboard'); // bypass splash/auth if already authenticated!
     }
@@ -269,11 +275,20 @@ export default function App() {
             </div>
 
             {/* Streak Indicator styled after the mockup streak element */}
-            <div className="hidden sm:flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 shadow-inner">
+            <button
+              onClick={() => {
+                if (window.confirm("Do you want to reset your typing streak to 0?")) {
+                  const updatedProfile = { ...profile, streak: 0 };
+                  saveProfile(updatedProfile);
+                }
+              }}
+              title="Click to reset streak to 0"
+              className="hidden sm:flex items-center gap-2 bg-white/5 hover:bg-orange-500/10 px-3 py-1.5 rounded-full border border-white/10 hover:border-orange-500/25 shadow-inner transition cursor-pointer"
+            >
               <span className="text-orange-500 font-bold">🔥 {profile.streak}</span>
               <div className="w-px h-3 bg-white/20"></div>
               <span className="text-[9px] uppercase text-white/40 tracking-wider font-bold">STREAK</span>
-            </div>
+            </button>
 
             {/* Profile trigger */}
             <div className="flex items-center gap-2">
@@ -346,6 +361,10 @@ export default function App() {
                     onChangeView={setCurrentView}
                     onClaimDailyReward={handleClaimStreakBonus}
                     claimedStreak={claimedStreak}
+                    onResetStreak={() => {
+                      const updatedProfile = { ...profile, streak: 0 };
+                      saveProfile(updatedProfile);
+                    }}
                   />
                 )}
                 {currentView === 'lessons' && (

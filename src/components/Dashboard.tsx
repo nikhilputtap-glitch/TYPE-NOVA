@@ -8,9 +8,10 @@ interface DashboardProps {
   onChangeView: (view: string) => void;
   onClaimDailyReward: () => void;
   claimedStreak: boolean;
+  onResetStreak: () => void;
 }
 
-export default function Dashboard({ profile, onChangeView, onClaimDailyReward, claimedStreak }: DashboardProps) {
+export default function Dashboard({ profile, onChangeView, onClaimDailyReward, claimedStreak, onResetStreak }: DashboardProps) {
   // Dynamic personalized pathway recommendation text
   const getRecommendation = () => {
     switch (profile.levelPath.skill) {
@@ -107,13 +108,21 @@ export default function Dashboard({ profile, onChangeView, onClaimDailyReward, c
               </div>
             </div>
 
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl border border-white/10 shadow-inner">
+            <button
+              onClick={() => {
+                if (window.confirm("Do you want to reset your typing streak to 0?")) {
+                  onResetStreak();
+                }
+              }}
+              title="Click to reset streak to 0"
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-orange-500/10 rounded-2xl border border-white/10 hover:border-orange-500/20 shadow-inner text-left transition duration-200 cursor-pointer"
+            >
               <Flame className="w-5 h-5 text-orange-500" />
               <div>
                 <span className="block text-[8px] text-white/40 font-bold uppercase tracking-wider">STREAK</span>
                 <span className="font-mono text-sm text-pink-400 font-bold">{profile.streak} Days</span>
               </div>
-            </div>
+            </button>
           </div>
         </div>
       </div>
