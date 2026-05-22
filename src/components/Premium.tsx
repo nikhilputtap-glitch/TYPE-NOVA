@@ -54,11 +54,11 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
 
   // Open direct UPI Payment Modal for Elite Upgrade
   const handleSubscribe = () => {
-    const upiUrl = getUpiUrl(1, 'TypeNova Elite Monthly Plan');
+    const upiUrl = getUpiUrl(399, 'TypeNova Elite Monthly Plan');
     setPaymentDetails({
       type: 'elite',
-      priceUSD: 0.01,
-      priceINR: 1,
+      priceUSD: 4.75,
+      priceINR: 399,
       title: 'Elite Monthly Subscription Plan',
       upiUrl
     });
@@ -113,8 +113,8 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
           <div>
             <span className="text-xs font-mono text-pink-400 font-bold uppercase block">Elite Monthly plan</span>
             <div className="flex items-baseline gap-1 mt-4">
-              <span className="text-4xl font-extrabold text-white font-display">₹1</span>
-              <span className="text-pink-400/60 text-xs font-mono ml-1">/ $0.01 USD</span>
+              <span className="text-4xl font-extrabold text-white font-display">₹399</span>
+              <span className="text-pink-400/60 text-xs font-mono ml-1">/ $4.75 USD</span>
             </div>
 
             <ul className="space-y-3.5 mt-6 text-xs text-white/60">
@@ -129,6 +129,9 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
               </li>
               <li className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-cyan-400" /> Absolute NO advertising interference
+              </li>
+              <li className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-400" /> Includes 5000 Bonus Coins
               </li>
             </ul>
           </div>

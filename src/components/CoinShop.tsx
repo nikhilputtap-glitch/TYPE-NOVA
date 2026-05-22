@@ -147,6 +147,18 @@ export default function CoinShop({ profile, onUpdateProfile }: CoinShopProps) {
     }
   };
 
+  const shopSubscription = {
+    id: 'elite-monthly',
+    name: '🌟 Elite Monthly Access',
+    description: 'Unlock infinite practice modes, advanced analytics, and exclusive themes for 30 days.',
+    price: 399,
+  };
+
+  const handleBuySubscription = () => {
+    // In a real application, this would redirect to a payment gateway (e.g., Stripe Checkout)
+    showSuccess(`Redirecting to payment gateway for ₹${shopSubscription.price}... 💳`);
+  };
+
   return (
     <div className="glass-panel p-6 rounded-3xl relative overflow-hidden bg-white/[0.02] border border-white/10 space-y-6">
       {/* Dynamic line decorations */}
@@ -213,8 +225,31 @@ export default function CoinShop({ profile, onUpdateProfile }: CoinShopProps) {
       </div>
 
       {/* Shop Category Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         
+        {/* CATEGORY 0: ELITE SUBSCRIPTION */}
+        <div className="p-5 bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 rounded-2xl space-y-4 relative flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-mono font-bold text-purple-400 uppercase tracking-widest">MEMBERSHIP</span>
+              <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 text-[8px] font-black border border-purple-500/20 rounded-md uppercase font-mono">PREMIUM</span>
+            </div>
+            <h4 className="text-sm font-extrabold text-white mt-1 uppercase tracking-tight flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-purple-400" /> Elite Monthly Plan
+            </h4>
+            <p className="text-xs text-white/50 mt-1 leading-relaxed">
+              {shopSubscription.description}
+            </p>
+          </div>
+          <button
+            onClick={handleBuySubscription}
+            id="btn-buy-elite-sub"
+            className="w-full mt-4 py-3 bg-purple-600 hover:brightness-110 text-white font-extrabold text-xs tracking-wider uppercase rounded-xl transition shadow-md shadow-purple-600/10 cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            BUY FOR ₹{shopSubscription.price}
+          </button>
+        </div>
+
         {/* CATEGORY 1: STREAK SHIELD SYSTEMS */}
         <div className="p-5 bg-gradient-to-br from-indigo-500/5 to-transparent border border-white/5 rounded-2xl space-y-4 relative flex flex-col justify-between">
           <div>

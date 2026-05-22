@@ -3,6 +3,7 @@ import { Play, BookOpen, Swords, Gamepad2, Award, Sparkles, TrendingUp, Flame, C
 import { UserProfile, TaskChallenge } from '../types';
 import { MOCK_CHALLENGES } from '../lessonsData';
 import CoinShop from './CoinShop';
+import AdBanner from './AdBanner';
 
 interface DashboardProps {
   profile: UserProfile;
@@ -366,6 +367,9 @@ export default function Dashboard({ profile, onChangeView, onClaimDailyReward, c
 
       {/* COIN VAULT AND WORKSPACE STORE */}
       <CoinShop profile={profile} onUpdateProfile={onUpdateProfile} />
+
+      {/* AD PLACEMENT */}
+      <AdBanner />
     </div>
   );
 }
