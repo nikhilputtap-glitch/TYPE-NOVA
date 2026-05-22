@@ -19,6 +19,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [googleEmail, setGoogleEmail] = useState('nikhilputtap@gmail.com');
   const [googleName, setGoogleName] = useState('Nikhil');
   const [googleProgress, setGoogleProgress] = useState<string[]>([]);
+  const [googlePassword, setGooglePassword] = useState('');
 
   // Helper to fetch registry accounts
   const getRegisteredAccounts = (): Record<string, any> => {
@@ -116,7 +117,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       }
 
       if (accounts[trimmedEmail]) {
-        setErrorMsg('An account with this email already exists.');
+        setErrorMsg('An account with this email already exists! Please log in directly with your password.');
+        setIsLogin(true); // Switch to Login screen/mode instantly
         return;
       }
 
@@ -149,14 +151,32 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     setErrorMsg('');
     setGoogleStep('input');
     setGoogleProgress([]);
+    setGooglePassword('');
   };
 
   const handleGoogleSubmitInput = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!googleEmail.trim().includes('@')) {
+    const targetEmail = googleEmail.trim().toLowerCase();
+    if (!targetEmail.includes('@')) {
       setErrorMsg('Please enter a valid Google Mail address.');
       return;
     }
+
+    if (googlePassword.length < 5) {
+      setErrorMsg('Password should be at least 5 characters for profile protection.');
+      return;
+    }
+
+    const accounts = getRegisteredAccounts();
+    const existingUser = accounts[targetEmail];
+    if (existingUser) {
+      const currentSavedPass = existingUser.password || 'google-oauth-sim-pass-secret';
+      if (currentSavedPass !== 'google-oauth-sim-pass-secret' && currentSavedPass !== googlePassword) {
+        setErrorMsg('Incorrect secure password for this Google account. Please try again.');
+        return;
+      }
+    }
+
     setErrorMsg('');
     setGoogleStep('consent');
   };
@@ -198,10 +218,15 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         const newProfile = createMockProfile(customName, targetEmail, false);
         googleUser = {
           email: targetEmail,
-          password: 'google-oauth-sim-pass-secret',
+          password: googlePassword,
           profile: newProfile,
           sessions: []
         };
+        accounts[targetEmail] = googleUser;
+        saveRegisteredAccounts(accounts);
+      } else {
+        // Upgrade password to custom password if they login
+        googleUser.password = googlePassword;
         accounts[targetEmail] = googleUser;
         saveRegisteredAccounts(accounts);
       }
@@ -243,65 +268,104 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
           </div>
         )}
 
-        {googleStep === 'input' ? (
-          <form onSubmit={handleGoogleSubmitInput} className="space-y-4 animate-[fadeIn_0.2s_ease-out]">
-            <div className="p-4 bg-cyan-400/5 border border-cyan-400/10 rounded-2xl text-center mb-2">
-              <span className="text-cyan-400 font-bold font-mono text-[10px] block tracking-wider uppercase mb-1">
-                🌐 Google Account Link
-              </span>
-              <p className="text-[10px] text-gray-400 font-mono leading-relaxed">
-                Connect your Google identity securely to synchronise historic performance records.
-              </p>
-            </div>
+        {googleStep === 'input' ? (() => {
+          const targetEmailForCheck = googleEmail.trim().toLowerCase();
+          const accountsDict = getRegisteredAccounts();
+          const isExistingGoogleUser = !!accountsDict[targetEmailForCheck];
 
-            <div className="relative">
-              <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-                <Mail className="w-5 h-5" />
-              </span>
-              <input
-                type="email"
-                required
-                placeholder="GOOGLE ACCOUNT EMAIL"
-                value={googleEmail}
-                onChange={(e) => setGoogleEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-[#0a0b10] border border-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono text-xs"
-              />
-            </div>
+          return (
+            <form onSubmit={handleGoogleSubmitInput} className="space-y-4 animate-[fadeIn_0.2s_ease-out]">
+              <div className="p-4 bg-cyan-400/5 border border-cyan-400/10 rounded-2xl text-center mb-2">
+                <span className="text-cyan-400 font-bold font-mono text-[10px] block tracking-wider uppercase mb-1">
+                  🌐 Google Account Link
+                </span>
+                <p className="text-[10px] text-gray-400 font-mono leading-relaxed">
+                  {isExistingGoogleUser 
+                    ? "Welcome back! Enter your Google password credential to synchronize stats."
+                    : "Connect your Google identity securely to synchronise historic performance records."}
+                </p>
+              </div>
 
-            <div className="relative">
-              <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-                <UserPlus className="w-5 h-5" />
-              </span>
-              <input
-                type="text"
-                required
-                placeholder="YOUR GOOGLE PROFILE NAME"
-                value={googleName}
-                onChange={(e) => setGoogleName(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-[#0a0b10] border border-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono text-xs"
-              />
-            </div>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
+                  <Mail className="w-5 h-5" />
+                </span>
+                <input
+                  type="email"
+                  required
+                  placeholder="GOOGLE ACCOUNT EMAIL"
+                  value={googleEmail}
+                  onChange={(e) => setGoogleEmail(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-[#0a0b10] border border-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono text-xs"
+                />
+              </div>
 
-            <button
-              type="submit"
-              id="btn-google-auth-continue"
-              className="w-full py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 rounded-xl text-white font-medium text-xs tracking-uppercase transition flex items-center justify-center gap-2 font-mono uppercase font-bold"
-            >
-              🚀 Continue to Authorization
-            </button>
+              {!isExistingGoogleUser ? (
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
+                    <UserPlus className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="YOUR GOOGLE PROFILE NAME"
+                    value={googleName}
+                    onChange={(e) => setGoogleName(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-[#0a0b10] border border-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono text-xs"
+                  />
+                </div>
+              ) : (
+                <div className="p-3 bg-white/5 border border-white/5 rounded-xl text-left">
+                  <span className="text-[9px] text-gray-500 block uppercase font-mono tracking-wider font-bold">Linked Username</span>
+                  <span className="text-xs text-white uppercase font-mono">{accountsDict[targetEmailForCheck]?.profile?.username}</span>
+                </div>
+              )}
 
-            <div className="text-center mt-3">
+              <div className="relative">
+                <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
+                  <Lock className="w-5 h-5" />
+                </span>
+                <input
+                  type="password"
+                  required
+                  placeholder={isExistingGoogleUser ? "VERIFY YOUR PASSWORD" : "CHOOSE SECURITY PASSWORD"}
+                  value={googlePassword}
+                  onChange={(e) => setGooglePassword(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-[#0a0b10] border border-white/5 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition font-mono text-xs"
+                />
+              </div>
+
+              {isExistingGoogleUser ? (
+                <p className="text-[10px] text-cyan-400/80 font-mono text-center">
+                  🛡️ Password secure verify lock. Enter to sign in.
+                </p>
+              ) : (
+                <p className="text-[9px] text-gray-500 font-mono text-center leading-normal">
+                  ✨ Set a secure password. You can log in via Google or use this password standardly in standard forms!
+                </p>
+              )}
+
               <button
-                type="button"
-                onClick={() => setGoogleStep(null)}
-                id="btn-google-auth-cancel-1"
-                className="text-[10px] text-gray-400 hover:text-white underline font-mono tracking-wider uppercase"
+                type="submit"
+                id="btn-google-auth-continue"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 rounded-xl text-white font-medium text-xs tracking-uppercase transition flex items-center justify-center gap-2 font-mono uppercase font-bold"
               >
-                Cancel and Return
+                🚀 Continue to Authorization
               </button>
-            </div>
-          </form>
-        ) : googleStep === 'consent' ? (
+
+              <div className="text-center mt-3">
+                <button
+                  type="button"
+                  onClick={() => setGoogleStep(null)}
+                  id="btn-google-auth-cancel-1"
+                  className="text-[10px] text-gray-400 hover:text-white underline font-mono tracking-wider uppercase"
+                >
+                  Cancel and Return
+                </button>
+              </div>
+            </form>
+          );
+        })() : googleStep === 'consent' ? (
           <div className="space-y-5 animate-[fadeIn_0.2s_ease-out]">
             <div className="p-4 bg-white/5 border border-white/5 rounded-2xl">
               <div className="flex items-center gap-3 border-b border-white/5 pb-3 mb-3">
