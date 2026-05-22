@@ -34,6 +34,11 @@ async function startServer() {
 
   // --- API Routes ---
 
+  // Google Search Console Site Verification File Endpoint
+  app.get("/googlec00b1f8351e9f2dc.html", (req, res) => {
+    res.send("google-site-verification: googlec00b1f8351e9f2dc.html");
+  });
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", time: new Date().toISOString() });
