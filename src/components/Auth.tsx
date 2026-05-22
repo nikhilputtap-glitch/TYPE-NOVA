@@ -51,7 +51,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       xp: 0,
       level: 1,
       coins: 50,
-      streak: 1,
+      streak: 0,
       lastActiveDate: new Date().toISOString().split('T')[0],
       levelPath: {
         skill: 'Beginner',
