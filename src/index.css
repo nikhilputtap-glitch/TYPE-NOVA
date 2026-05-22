@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Cool theme color tokens aligning with Immersive UI */
+  --color-cyber-cyan: #22d3ee; /* cyan-400 */
+  --color-cyber-magenta: #a855f7; /* purple-500 / magenta */
+  --color-cyber-yellow: #f59e0b; /* amber-500 */
+  --color-cyber-bg: #0a0a0c; /* Immersive UI midnight black background */
+  --color-cyber-card: rgba(255, 255, 255, 0.05); /* Frosted white glass cards */
+  --color-cyber-green: #10b981; /* emerald-500 */
+}
+
+/* Custom styles and glassmorphism helpers */
+@layer base {
+  body {
+    background-color: var(--color-cyber-bg);
+    color: #ffffff;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+}
+
+/* Glassmorphism card utility using Immersive UI specs (white/5 with white/10 border) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Dyslexia friendly font styling override */
+.font-dyslexic {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+  letter-spacing: 0.15em !important;
+  word-spacing: 0.25em !important;
+  line-height: 1.6 !important;
+}
+
+/* Typing cursor effects matching MonkeyType */
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.cursor-flicker {
+  animation: blink 1s step-end infinite;
+}
+
+/* Custom subtle scrollbar mirroring professional terminal setups */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #22d3ee;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+}

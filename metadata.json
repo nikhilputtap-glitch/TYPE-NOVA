@@ -1,0 +1,6 @@
+{
+  "name": "TypeNova",
+  "description": "A futuristic modern typing master applet with interactive lessons, tests, AI coach feedback, custom game modes, and progress analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
