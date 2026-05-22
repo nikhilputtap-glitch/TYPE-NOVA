@@ -16,8 +16,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [forgotPassword, setForgotPassword] = useState(false);
   const [submittedReset, setSubmittedReset] = useState(false);
   const [googleStep, setGoogleStep] = useState<'input' | 'consent' | 'sending' | null>(null);
-  const [googleEmail, setGoogleEmail] = useState('nikhilputtap@gmail.com');
-  const [googleName, setGoogleName] = useState('Nikhil');
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [googleName, setGoogleName] = useState('');
   const [googleProgress, setGoogleProgress] = useState<string[]>([]);
   const [googlePassword, setGooglePassword] = useState('');
 
