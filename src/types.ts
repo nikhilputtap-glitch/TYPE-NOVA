@@ -49,12 +49,14 @@ export interface UserProfile {
   username: string;
   email: string;
   isGuest: boolean;
+  isElite?: boolean;
   avatarUrl: string;
   xp: number;
   level: number;
   coins: number;
   streak: number;
   lastActiveDate: string; // YYYY-MM-DD
+  lastStreakClaimedDate?: string; // YYYY-MM-DD
   levelPath: {
     skill: SkillLevel;
     purpose: TrainingPurpose;

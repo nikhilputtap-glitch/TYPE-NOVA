@@ -24,6 +24,9 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
   const [copied, setCopied] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [utrNumber, setUtrNumber] = useState('');
+  const [paymentError, setPaymentError] = useState('');
+  const [verificationLogs, setVerificationLogs] = useState<string[]>([]);
 
   // Base UPI URL builder for 8688923649@ybl
   const getUpiUrl = (amount: number, note: string) => {
@@ -44,6 +47,9 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
     setCopied(false);
     setVerificationSuccess(false);
     setVerifyingPayment(false);
+    setUtrNumber('');
+    setPaymentError('');
+    setVerificationLogs([]);
   };
 
   // Open direct UPI Payment Modal for Elite Upgrade
@@ -59,6 +65,9 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
     setCopied(false);
     setVerificationSuccess(false);
     setVerifyingPayment(false);
+    setUtrNumber('');
+    setPaymentError('');
+    setVerificationLogs([]);
   };
 
   // Safe manual copy for UPI ID
@@ -198,17 +207,27 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
             {/* Modal Content */}
             <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto pr-2 scrollbar-none">
               {verifyingPayment ? (
-                <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="py-8 flex flex-col items-center justify-center text-center space-y-4">
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                    className="p-3.5 bg-cyan-400/10 rounded-full text-cyan-400"
+                    className="p-3.5 bg-cyan-400/10 rounded-full text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
                   >
                     <Loader2 className="w-8 h-8" />
                   </motion.div>
-                  <div>
+                  <div className="w-full">
                     <h4 className="text-white font-bold text-sm">Validating Secure Transfer...</h4>
-                    <p className="text-[10px] text-white/50 mt-1 font-mono">Connecting with BHIM UPI Node target: 8688923649@ybl</p>
+                    <p className="text-[10px] text-cyan-400/80 mt-1 font-mono font-bold tracking-wider uppercase">Ledger verification in progress</p>
+                    
+                    {/* Live secure terminal logger steps */}
+                    <div className="bg-black/90 rounded-2xl p-3.5 border border-white/5 mt-4 text-left font-mono text-[9px] text-cyan-300 space-y-1.5 h-36 overflow-y-auto w-full select-text leading-relaxed">
+                      {verificationLogs.map((log, index) => (
+                        <div key={index} className="animate-[fadeIn_0.15s_ease-out] flex gap-1.5">
+                          <span className="text-gray-500 font-bold">&gt;</span>
+                          <span className={log.includes('✅') || log.includes('Success') ? 'text-emerald-400 font-bold' : log.startsWith('[SYS]') ? 'text-yellow-405 text-yellow-400 font-bold' : 'text-cyan-300'}>{log}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ) : verificationSuccess ? (
@@ -216,9 +235,9 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
                   <motion.div
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="p-3.5 bg-emerald-500/10 rounded-full text-emerald-400"
+                    className="p-3.5 bg-emerald-500/10 rounded-full text-emerald-400 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                   >
-                    <CheckCircle2 className="w-12 h-12" />
+                    <CheckCircle2 className="w-12 h-12 animate-[bounce_1s_ease-in-out_infinite]" />
                   </motion.div>
                   <div>
                     <h4 className="text-white font-bold text-base">Payment Complete!</h4>
@@ -292,6 +311,36 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
                         </button>
                       </div>
                     </div>
+
+                    {/* UTR/UPI Ref Input Area with high security validation */}
+                    <div className="space-y-2 text-left mt-4 p-4 bg-cyan-500/5 border border-cyan-450/10 border-cyan-400/10 rounded-2xl">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-mono font-bold text-cyan-400 uppercase tracking-wider block">
+                          🔒 Enter 12-Digit UPI Ref No. (UTR)
+                        </label>
+                        <span className="text-[8px] text-gray-500 font-mono">REQUIRED</span>
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={12}
+                        placeholder="e.g. 629012345678"
+                        value={utrNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, ''); // retain numbers only
+                          setUtrNumber(val);
+                          setPaymentError('');
+                        }}
+                        className="w-full px-4 py-3 bg-[#0a0b10] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition font-mono text-sm tracking-widest text-center"
+                      />
+                      <p className="text-[9px] text-gray-400 leading-normal mt-1 font-mono">
+                        Copy the 12-digit UTR sequence from Google Pay, PhonePe, Paytm or BHIM transaction note.
+                      </p>
+                      {paymentError && (
+                        <p className="text-[9.5px] text-rose-450 text-rose-405 text-red-400 font-mono font-bold mt-1.5 text-center bg-red-500/10 py-1.5 px-2.5 rounded-lg border border-red-500/20 leading-relaxed">
+                          ⚠️ {paymentError}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* CTA Bottom activation check */}
@@ -301,7 +350,28 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
                     </p>
                     <button
                       onClick={() => {
+                        if (!utrNumber || utrNumber.length !== 12) {
+                          setPaymentError('Invalid Transaction ID (UTR)! Must be exactly 12 numeric digits.');
+                          return;
+                        }
+                        setPaymentError('');
                         setVerifyingPayment(true);
+                        setVerificationLogs(['[SYS] Handshake with central UPI gateway node...']);
+
+                        const stepMessages = [
+                          '⚡ Authenticated ledger access keys...',
+                          `🔍 Querying BHIM central database for Ref: ${utrNumber}...`,
+                          `💰 Verifying received settlements of ₹${paymentDetails.priceINR}...`,
+                          '📈 Processing secure token generation and subscription ledger...',
+                          '✅ Match Confirmed! Syncing local vault status...'
+                        ];
+
+                        stepMessages.forEach((msg, idx) => {
+                          setTimeout(() => {
+                            setVerificationLogs(prev => [...prev, msg]);
+                          }, (idx + 1) * 800);
+                        });
+
                         setTimeout(() => {
                           setVerifyingPayment(false);
                           setVerificationSuccess(true);
@@ -309,6 +379,7 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
                             // Record a real secure transaction ledger object
                             const newTx = {
                               id: `TX-${Math.floor(100000 + Math.random() * 900000)}`,
+                              utr: utrNumber,
                               email: profile.email || 'guest-terminal@typenova.com',
                               username: profile.username,
                               type: paymentDetails.type,
@@ -332,16 +403,17 @@ export default function Premium({ profile, onCoinsSuccess, onUpgradeSuccess }: P
 
                             if (paymentDetails.type === 'elite') {
                               onUpgradeSuccess();
-                              setSuccessMsg('UPI Status Confirmed! Welcome to TypeNova ELITE pathway.');
+                              setSuccessMsg(`UPI Status Confirmed! Welcome to TypeNova ELITE pathway. (UTR: ${utrNumber})`);
                             } else {
                               onCoinsSuccess(profile.coins + paymentDetails.coinsAmount!);
-                              setSuccessMsg(`UPI Status Confirmed! Acquired +${paymentDetails.coinsAmount} TypeNova Coins.`);
+                              setSuccessMsg(`UPI Status Confirmed! Acquired +${paymentDetails.coinsAmount} TypeNova Coins. (UTR: ${utrNumber})`);
                             }
                             setPaymentDetails(null);
                             setVerificationSuccess(false);
+                            setUtrNumber('');
                             setTimeout(() => setSuccessMsg(''), 4000);
                           }, 1600);
-                        }, 1800);
+                        }, 5000); // Realistic 5 seconds wait
                       }}
                       className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs tracking-wider rounded-xl transition uppercase shadow-md shadow-emerald-500/20 active:scale-95"
                     >

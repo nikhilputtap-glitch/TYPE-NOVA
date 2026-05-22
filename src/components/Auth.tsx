@@ -47,6 +47,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       username: name || 'NovaTyper',
       email: mail || 'guest@typenova.com',
       isGuest: guest,
+      isElite: false,
       avatarUrl: `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${name || 'guest'}`,
       xp: 0,
       level: 1,

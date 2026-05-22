@@ -52,6 +52,16 @@ export default function App() {
     }
   }, []);
 
+  // Synchronize claimedStreak state based on profile's lastStreakClaimedDate dynamically
+  useEffect(() => {
+    if (profile) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      setClaimedStreak(profile.lastStreakClaimedDate === todayStr);
+    } else {
+      setClaimedStreak(false);
+    }
+  }, [profile]);
+
   // Save profile state updates dynamically
   const saveProfile = (newProfile: UserProfile) => {
     setProfile(newProfile);
@@ -105,11 +115,13 @@ export default function App() {
   // Claim Streak bonus
   const handleClaimStreakBonus = () => {
     if (!profile) return;
+    const todayStr = new Date().toISOString().split('T')[0];
     const updated: UserProfile = {
       ...profile,
       coins: profile.coins + 50,
       xp: profile.xp + 100,
-      streak: profile.streak + 1
+      streak: profile.streak + 1,
+      lastStreakClaimedDate: todayStr
     };
     saveProfile(updated);
     setClaimedStreak(true);
@@ -266,6 +278,18 @@ export default function App() {
         {/* User stats widget bar */}
         {profile && (
           <div className="flex items-center gap-4 text-xs font-mono select-none">
+            {/* Subscription status badge */}
+            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-inner ${
+              profile.isElite 
+                ? 'bg-gradient-to-r from-pink-500/10 to-rose-500/20 text-pink-400 border-pink-500/30' 
+                : 'bg-white/5 text-gray-400 border-white/10'
+            }`}>
+              <Sparkles className={`w-3 h-3 ${profile.isElite ? 'text-pink-400 animate-pulse' : 'text-gray-500'}`} />
+              <span className="text-[9px] tracking-wider uppercase font-extrabold font-mono">
+                {profile.isElite ? 'ELITE MEMBER' : 'FREE ACCOUNT'}
+              </span>
+            </div>
+
             {/* Coins Indicator styled after top bar telemetry widget */}
             <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 shadow-inner">
               <Coins className="w-3.5 h-3.5 text-amber-400 drop-shadow-[0_0_4px_rgba(245,158,11,0.5)]" />
@@ -472,6 +496,7 @@ export default function App() {
                     onUpgradeSuccess={() => {
                       saveProfile({
                         ...profile,
+                        isElite: true,
                         preferences: {
                           ...profile.preferences,
                           theme: 'cyberpunk-magenta' as any
